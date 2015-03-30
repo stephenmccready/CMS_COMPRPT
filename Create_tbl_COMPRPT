@@ -1,28 +1,28 @@
 Create Table tbl_COMPRPT (
-	  ContractNumber			VarChar(5) Null
+	  ContractNumber		VarChar(5) Null
 	, PlanBenefitPackage		VarChar(3) Null		-- PBP
-	, HICN						VarChar(12) Null
-	, FirstName					VarChar(30) Null
-	, MiddleName				VarChar(15) Null
-	, LastName					VarChar(40) Null
-	, Filler01					VarChar(173) Null
+	, HICN				VarChar(12) Null
+	, FirstName			VarChar(30) Null
+	, MiddleName			VarChar(15) Null
+	, LastName			VarChar(40) Null
+	, Filler01			VarChar(173) Null
 	, EnrollmentStartDate		VarChar(8) Null		-- Date Beneficiary's Plan enrollment starts, YYYYMMDD
-	, CycleYearStart			VarChar(3) Null		-- Cycle-Year as of Enrollment Effective Start Date
-	, ReportDate				VarChar(8) Null		-- Date report created, YYYYMMDD
-	, CycleYearReport			VarChar(3) Null		-- Cycle-Year as of Report Generation Date
-													-- -1 = no compensation cycle exists for this enrollment because the report generation date does not fall within the enrollment period. This occurs for both the prospective and retroactive enrollments.
-													-- 0 = reporting date falls within the enrollment period but the compensation cycle completed in a prior year,
-													-- 1 = first calendar year,
-													-- 2 = second calendar year, etc...
-	, PriorPlanType				VarChar(3) Null		-- Broad classification of Beneficiary's immediately prior Plan-type:
-													-- None = no prior Plan,
-													-- MA = non-drug MA Plan,
-													-- MAPD = MA Plan offering prescription drugs,
-													-- COST = Non-drug Medicare COST Plan,
-													-- COST/PD = Medicare COST Plan providing prescription drugs,
-													-- PDP = PDP and sometimes representative of a POS transaction,
-													-- PACE = Program for All-inclusive Care of the Elderly
-	, Filler02					VarChar(79) Null
-	, DateImported				DateTime Null
-	, [FileName]				VarChar(128) Null
+	, CycleYearStart		VarChar(3) Null		-- Cycle-Year as of Enrollment Effective Start Date
+	, ReportDate			VarChar(8) Null		-- Date report created, YYYYMMDD
+	, CycleYearReport		VarChar(3) Null		-- Cycle-Year as of Report Generation Date
+								-- -1 = no compensation cycle exists for this enrollment because the report generation date does not fall within the enrollment period. This occurs for both the prospective and retroactive enrollments.
+								-- 0 = reporting date falls within the enrollment period but the compensation cycle completed in a prior year,
+								-- 1 = first calendar year,
+								-- 2 = second calendar year, etc...
+	, PriorPlanType			VarChar(3) Null		-- Broad classification of Beneficiary's immediately prior Plan-type:
+								-- None = no prior Plan,
+								-- MA = non-drug MA Plan,
+								-- MAPD = MA Plan offering prescription drugs,
+								-- COST = Non-drug Medicare COST Plan,
+								-- COST/PD = Medicare COST Plan providing prescription drugs,
+								-- PDP = PDP and sometimes representative of a POS transaction,
+								-- PACE = Program for All-inclusive Care of the Elderly
+	, Filler02			VarChar(79) Null
+	, DateImported			DateTime Null
+	, [FileName]			VarChar(128) Null
 )
