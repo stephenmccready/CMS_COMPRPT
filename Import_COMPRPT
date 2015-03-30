@@ -1,0 +1,78 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER OFF
+GO
+
+Create procedure [dbo].[ImportCOMPRPT] @path As varChar(128), @filename As varChar(128), @emailRecipient As varchar(128)
+As
+
+Begin
+
+Truncate Table [dbo].[tbl_COMPRPT_In]
+Declare	@BulkCmd As nvarChar(4000)
+Set		@BulkCmd = "Bulk Insert tbl_COMPRPT_In From '"+@path+@filename+"' With (FIELDTERMINATOR = '\n')"
+Exec	(@BulkCmd)
+
+Declare @today As DateTime
+Set @today=getDate()
+
+Insert	Into [dbo].[tbl_COMPRPT]
+Select	Cast(SubString(LI.Col001,1,5) As VarChar(5)) As ContractNumber,
+		Cast(SubString(LI.Col001,6,3) As VarChar(3)) As PlanBenefitPackage,
+		Cast(SubString(LI.Col001,9,12) As VarChar(12)) As HICN,
+		Cast(SubString(LI.Col001,21,30) As VarChar(30)) As FirstName,
+		Cast(SubString(LI.Col001,51,15) As VarChar(15)) As MiddleName,
+		Cast(SubString(LI.Col001,66,40) As VarChar(40)) As LastName,
+		Cast(SubString(LI.Col001,106,173) As VarChar(173)) As Filler01,
+		Cast(SubString(LI.Col001,279,8) As VarChar(8)) As EnrollmentStartDate,
+		Cast(SubString(LI.Col001,287,3) As VarChar(3)) As CycleYearStartDate,
+		Cast(SubString(LI.Col001,290,8) As VarChar(8)) As ReportDate,
+		Cast(SubString(LI.Col001,298,3) As VarChar(3)) As CycleYearReport,
+		Cast(SubString(LI.Col001,301,7) As VarChar(7)) As PriorPlanType,
+		Cast(SubString(LI.Col001,308,79) As VarChar(79)) As Filler02,
+		@today As DateImported,
+		@filename As [FileName]
+From	tbl_COMPRPT_In As LI
+Left	Outer Join tbl_COMPRPT_Detail As LD
+		On LD.[Contract Number]=SubString(LI.Col001,1,5)
+		And LD.[PBP]=SubString(LI.Col001,6,3)
+		And LD.[HICN]=SubString(LI.Col001,9,12)
+		And LD.[FileName]=@filename
+Where	SubString(LI.Col001,9,12) <> ' '
+And		LD.[HICN] Is Null
+
+-- Output just this months parsed records to dbo.tbl_TEMP_COMPRPT
+If OBJECT_ID('dbo.tbl_TEMP_COMPRPT') Is Not Null
+   Drop Table dbo.tbl_TEMP_COMPRPT
+
+-- Create the excel file
+Select	*
+Into	dbo.tbl_TEMP_COMPRPT
+From	[dbo].[tbl_COMPRPT_Detail]
+Where	[FileName]=@filename
+And		[HICN] <> ''
+   
+Declare @body As varChar(max), @kount As int, @query As varchar(512)
+Declare @excelfilename As varchar(255)
+Set @excelfilename='\\your servername\yourfolder\COMPRPT_20'+RIGHT(@filename,6)+'.xls'
+-- See https://github.com/stephenmccready/MSSQL_Utilities/
+Exec [dbo].[usp_generate_excel_with_columns] 'your databasename','tbl_TEMP_COMPRPT', @excelfilename
+			
+	-- Email the excel as an attachment
+	Set @body='<b>Agent Broker Compensation Data File [COMPRPT] Attached</b>
+	          <br /><br />
+			  <i>This data file provides six-year broker compensation cycle-year counts. Data is sent to Plans 1) when a beneficiary enrolls, 2) each January when the cycle-year count increments and 3) as necessary when retroactive change affects the compensation cycle.</i>
+			  <br /><br /><small>SQL: ImportCOMPRPT</small>'
+	EXEC msdb..sp_send_dbmail  
+ 		@profile_name='Your Mail Profile Goes Here', 
+ 		@recipients=@emailRecipient, 
+ 		@subject='Agent Broker Compensation Data File [COMPRPT] Attached', 
+ 		@body=@body, 
+ 		@body_format='HTML', 
+		@file_attachments=@excelfilename 
+
+-- Housekeeping
+If OBJECT_ID('dbo.tbl_TEMP_COMPRPT') Is Not Null
+	Drop Table dbo.tbl_TEMP_COMPRPT
+	
+End
